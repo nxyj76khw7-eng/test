@@ -6,7 +6,7 @@ import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 /* ==============================================
-   КОНФИГУРАЦИЯ FIREBASE (Твои данные)
+   КОНФИГУРАЦИЯ FIREBASE
    ============================================== */
 const firebaseConfig = {
   apiKey: "AIzaSyDlu5_GlhpbjJW6pYcSRMSl8h3ZYolebtA",
@@ -51,8 +51,6 @@ const ui = {
                 e.preventDefault();
                 const pageId = target.getAttribute('data-page');
                 this.showPage(pageId);
-                
-                // Закрываем мобильное меню при клике
                 this.toggleMobileMenu(false);
             });
         });
@@ -62,31 +60,24 @@ const ui = {
         const overlay = document.getElementById('nav-overlay');
         
         burger.addEventListener('click', () => {
-            // Переключаем состояние (открыть/закрыть)
             const nav = document.getElementById('main-nav');
             const isActive = nav.classList.contains('active');
             this.toggleMobileMenu(!isActive);
         });
         
-        // Закрытие по клику на затемнение
         overlay.addEventListener('click', () => this.toggleMobileMenu(false));
 
         // 3. Формы (Вход / Регистрация)
         document.getElementById('login-form').addEventListener('submit', (e) => this.handleLogin(e));
         document.getElementById('reg-form').addEventListener('submit', (e) => this.handleRegister(e));
 
-        // 4. Переключатель "Создать аккаунт" <-> "Войти"
         document.getElementById('btn-toggle-auth').addEventListener('click', () => {
-            // Проверяем, видна ли сейчас форма входа
             const loginForm = document.getElementById('login-form');
             const isLoginVisible = !loginForm.classList.contains('hidden');
-            
-            // Если Вход виден -> переключаем на Регистрацию (false)
-            // Если Вход скрыт (мы в Регистрации) -> переключаем на Вход (true)
             this.toggleAuthView(!isLoginVisible); 
         });
 
-        // 5. Выход из аккаунта
+        // 4. Выход из аккаунта
         document.getElementById('btn-logout').addEventListener('click', () => {
             signOut(auth).then(() => {
                 this.toggleMobileMenu(false);
@@ -94,14 +85,41 @@ const ui = {
             });
         });
 
-        // 6. Добавление объявления
+        // 5. Добавление объявления
         document.getElementById('form-add').addEventListener('submit', (e) => this.handleAddListing(e));
 
-        // 7. Фильтры
-        document.getElementById('btn-apply-filters').addEventListener('click', () => this.loadListings());
+        // 6. ФИЛЬТРЫ И МОДАЛЬНОЕ ОКНО
+        const filterModal = document.getElementById('filter-modal');
+        const btnOpenFilter = document.getElementById('btn-open-filter');
+        const btnCloseFilter = document.getElementById('btn-close-filter');
+        const btnApplyFilters = document.getElementById('btn-apply-filters');
+        const btnRefresh = document.getElementById('btn-refresh');
+
+        // Открыть фильтр
+        btnOpenFilter.addEventListener('click', () => {
+            filterModal.classList.remove('hidden');
+        });
+
+        // Закрыть фильтр
+        btnCloseFilter.addEventListener('click', () => {
+            filterModal.classList.add('hidden');
+        });
+        
+        // Закрыть по клику вне окна
+        filterModal.addEventListener('click', (e) => {
+            if (e.target === filterModal) filterModal.classList.add('hidden');
+        });
+
+        // Применить фильтры
+        btnApplyFilters.addEventListener('click', () => {
+            this.loadListings();
+            filterModal.classList.add('hidden');
+        });
+
+        // Кнопка обновить
+        btnRefresh.addEventListener('click', () => this.loadListings());
     },
 
-    // Функция управления мобильным меню
     toggleMobileMenu: function(show) {
         const nav = document.getElementById('main-nav');
         const overlay = document.getElementById('nav-overlay');
@@ -111,7 +129,7 @@ const ui = {
             nav.classList.add('active');
             overlay.style.display = 'block';
             burgerIcon.classList.remove('fa-bars');
-            burgerIcon.classList.add('fa-times'); // Меняем иконку на крестик
+            burgerIcon.classList.add('fa-times');
         } else {
             nav.classList.remove('active');
             overlay.style.display = 'none';
@@ -215,9 +233,12 @@ const ui = {
         submitBtn.disabled = true;
         submitBtn.textContent = "Публикация...";
 
+        // Собираем данные, включая новые поля (Город, Комнаты)
         const newListing = {
             title: document.getElementById('l-title').value,
             type: document.getElementById('l-type').value,
+            city: document.getElementById('l-city').value,
+            rooms: document.getElementById('l-rooms').value,
             price: Number(document.getElementById('l-price').value),
             area: Number(document.getElementById('l-area').value),
             address: document.getElementById('l-address').value,
@@ -249,26 +270,54 @@ const ui = {
         container.innerHTML = '';
         loader.classList.remove('hidden');
 
+        // Получаем значения фильтров
+        const fType = document.getElementById('f-type').value;
+        const fCity = document.getElementById('f-city').value;
+        const fRooms = document.getElementById('f-rooms').value;
+        const fPriceFrom = document.getElementById('f-price-from').value;
+        const fPriceTo = document.getElementById('f-price-to').value;
+
         try {
             const q = query(collection(db, "listings"), orderBy("createdAt", "desc"));
             const querySnapshot = await getDocs(q);
             
             let html = '';
-            const typeFilter = document.getElementById('f-type').value;
-            const priceFilter = document.getElementById('f-price').value;
+            let count = 0;
 
             querySnapshot.forEach((doc) => {
                 const item = doc.data();
                 
-                if (typeFilter !== 'all' && item.type !== typeFilter) return;
-                if (priceFilter && item.price > Number(priceFilter)) return;
+                // ЛОГИКА ФИЛЬТРАЦИИ
+                // 1. Тип (Аренда/Продажа)
+                if (fType !== 'all' && item.type !== fType) return;
+                
+                // 2. Город
+                if (fCity !== 'all' && item.city !== fCity) return;
+                
+                // 3. Комнаты
+                // Если выбрано "7+", показываем всё что >= 7. Иначе точное совпадение.
+                if (fRooms !== 'all') {
+                    if (fRooms === '7') {
+                        if (Number(item.rooms) < 7) return;
+                    } else {
+                        if (String(item.rooms) !== fRooms) return;
+                    }
+                }
 
+                // 4. Цена (От и До)
+                if (fPriceFrom && item.price < Number(fPriceFrom)) return;
+                if (fPriceTo && item.price > Number(fPriceTo)) return;
+
+                count++;
+
+                // Генерация карточки
                 html += `
                 <div class="card">
                     <div class="card-img-wrap">
                         <span class="card-badge ${item.type}">
                             ${item.type === 'rent' ? 'Аренда' : 'Продажа'}
                         </span>
+                        ${item.city ? `<span class="card-badge-city">${item.city}</span>` : ''}
                         <img src="${item.img}" class="card-img" alt="${item.title}" onerror="this.src='https://placehold.co/400x300?text=Нет+фото'">
                     </div>
                     <div class="card-body">
@@ -276,15 +325,17 @@ const ui = {
                         <div class="card-title">${item.title}</div>
                         <div class="card-meta">
                             <span><i class="fas fa-expand"></i> ${item.area} м²</span>
-                            <span><i class="fas fa-map-marker-alt"></i> ${item.address}</span>
+                            <span><i class="fas fa-bed"></i> ${item.rooms || '?'} комн.</span>
                         </div>
-                        <p style="font-size:0.8rem; color:#888;">Автор: ${item.author ? item.author.split('@')[0] : 'Агент'}</p>
+                        <div class="card-address">
+                            <i class="fas fa-map-marker-alt"></i> ${item.address}
+                        </div>
                     </div>
                 </div>`;
             });
 
             if (html === '') {
-                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #777;">Объявлений пока нет.</p>';
+                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #777; margin-top:20px;">Объявлений по вашему запросу не найдено.</p>';
             } else {
                 container.innerHTML = html;
             }
