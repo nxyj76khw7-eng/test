@@ -92,16 +92,19 @@
             <div class="catalog-header">
                 <h2 class="section-title">Актуальные предложения</h2>
                 
-                <div class="filters-bar">
-                    <select id="f-type">
-                        <option value="all">Все типы</option>
-                        <option value="rent">Аренда</option>
-                        <option value="sale">Продажа</option>
-                    </select>
-                    <input type="number" id="f-price" placeholder="Макс. цена ($)">
-                    <button id="btn-apply-filters" class="btn btn-black">Поиск</button>
+                <!-- Новая панель управления с кнопкой фильтра -->
+                <div class="controls-bar">
+                    <button id="btn-open-filter" class="btn btn-red">
+                        <i class="fas fa-sliders-h"></i> Фильтры
+                    </button>
+                    <button id="btn-refresh" class="btn btn-outline">
+                        <i class="fas fa-sync-alt"></i> Обновить
+                    </button>
                 </div>
             </div>
+
+            <!-- Активные фильтры (инфо) -->
+            <div id="active-filters-info" class="filters-info hidden"></div>
 
             <!-- Спиннер загрузки -->
             <div id="loader" class="loader hidden"></div>
@@ -112,6 +115,71 @@
         </div>
     </section>
 
+    <!-- МОДАЛЬНОЕ ОКНО ФИЛЬТРА -->
+    <div id="filter-modal" class="modal-overlay hidden">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h3>Поиск недвижимости</h3>
+                <button id="btn-close-filter" class="close-icon"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="filter-group">
+                    <label>Тип сделки</label>
+                    <select id="f-type">
+                        <option value="all">Любой</option>
+                        <option value="rent">Аренда</option>
+                        <option value="sale">Продажа</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Город</label>
+                    <select id="f-city">
+                        <option value="all">Вся Беларусь</option>
+                        <option value="Минск">Минск</option>
+                        <option value="Гомель">Гомель</option>
+                        <option value="Могилев">Могилев</option>
+                        <option value="Витебск">Витебск</option>
+                        <option value="Гродно">Гродно</option>
+                        <option value="Брест">Брест</option>
+                        <option value="Бобруйск">Бобруйск</option>
+                        <option value="Барановичи">Барановичи</option>
+                        <option value="Борисов">Борисов</option>
+                        <option value="Пинск">Пинск</option>
+                        <option value="Орша">Орша</option>
+                        <option value="Мозырь">Мозырь</option>
+                        <option value="Солигорск">Солигорск</option>
+                        <option value="Лида">Лида</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Количество комнат</label>
+                    <select id="f-rooms">
+                        <option value="all">Неважно</option>
+                        <option value="1">1 комната</option>
+                        <option value="2">2 комнаты</option>
+                        <option value="3">3 комнаты</option>
+                        <option value="4">4 комнаты</option>
+                        <option value="5">5 комнат</option>
+                        <option value="6">6 комнат</option>
+                        <option value="7">7+ комнат</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Цена ($)</label>
+                    <div class="price-inputs">
+                        <input type="number" id="f-price-from" placeholder="От">
+                        <input type="number" id="f-price-to" placeholder="До">
+                    </div>
+                </div>
+
+                <button id="btn-apply-filters" class="btn btn-red btn-block">Показать результаты</button>
+            </div>
+        </div>
+    </div>
+
     <!-- СТРАНИЦА: ДОБАВИТЬ ОБЪЯВЛЕНИЕ -->
     <section id="add-listing" class="page hidden">
         <div class="container section-padding-top">
@@ -121,13 +189,49 @@
                     <div class="form-row">
                         <div class="form-col">
                             <label>Заголовок</label>
-                            <input type="text" id="l-title" placeholder="Например: 2-к квартира" required>
+                            <input type="text" id="l-title" placeholder="Например: Уютная квартира в центре" required>
                         </div>
                         <div class="form-col">
                             <label>Тип</label>
                             <select id="l-type">
                                 <option value="rent">Аренда</option>
                                 <option value="sale">Продажа</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Новые поля для базы данных -->
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label>Город</label>
+                            <select id="l-city" required>
+                                <option value="" disabled selected>Выберите город</option>
+                                <option value="Минск">Минск</option>
+                                <option value="Гомель">Гомель</option>
+                                <option value="Могилев">Могилев</option>
+                                <option value="Витебск">Витебск</option>
+                                <option value="Гродно">Гродно</option>
+                                <option value="Брест">Брест</option>
+                                <option value="Бобруйск">Бобруйск</option>
+                                <option value="Барановичи">Барановичи</option>
+                                <option value="Борисов">Борисов</option>
+                                <option value="Пинск">Пинск</option>
+                                <option value="Орша">Орша</option>
+                                <option value="Мозырь">Мозырь</option>
+                                <option value="Солигорск">Солигорск</option>
+                                <option value="Лида">Лида</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label>Комнат</label>
+                            <select id="l-rooms" required>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7+</option>
                             </select>
                         </div>
                     </div>
@@ -144,8 +248,8 @@
                     </div>
 
                     <div class="form-col">
-                        <label>Адрес</label>
-                        <input type="text" id="l-address" placeholder="Улица, дом" required>
+                        <label>Адрес (Улица, дом)</label>
+                        <input type="text" id="l-address" placeholder="Например: ул. Ленина, 5" required>
                     </div>
 
                     <div class="form-col">
