@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>КРЫША | Агентство недвижимости</title>
+    <!-- Шрифт Manrope -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Иконки -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Шапка -->
+    <header class="header">
+        <div class="container header-container">
+            <div class="logo">
+                <i class="fas fa-home"></i> КРЫША
+            </div>
+            
+            <!-- Мобильная кнопка меню -->
+            <div class="burger" id="burger-btn">
+                <i class="fas fa-bars"></i>
+            </div>
+
+            <!-- Навигация (Меню) -->
+            <nav class="nav" id="main-nav">
+                <a href="#" data-page="home" class="nav-link">Главная</a>
+                <a href="#" data-page="listings" class="nav-link">Объявления</a>
+                <a href="#" data-page="contacts" class="nav-link">Контакты</a>
+                
+                <div class="auth-buttons-mobile">
+                    <!-- Блок для гостей -->
+                    <div id="guest-nav">
+                        <button data-page="auth" class="btn btn-black btn-sm">Войти</button>
+                    </div>
+                    <!-- Блок для авторизованных -->
+                    <div id="user-nav" style="display: none;">
+                        <span id="user-email" class="user-email-display"></span>
+                        <button data-page="add-listing" class="btn btn-red btn-sm">Добавить +</button>
+                        <button id="btn-logout" class="btn btn-outline btn-sm">Выход</button>
+                    </div>
+                </div>
+            </nav>
+            
+            <!-- Затемнение фона при открытом меню -->
+            <div class="overlay" id="nav-overlay"></div>
+        </div>
+    </header>
+
+    <!-- СТРАНИЦА: ГЛАВНАЯ -->
+    <section id="home" class="page active">
+        <div class="hero">
+            <div class="container hero-content">
+                <h1 class="hero-title">Найдем ваш <br><span class="text-red">идеальный дом</span></h1>
+                <p class="hero-subtitle">Единая база недвижимости. Данные обновляются в реальном времени.</p>
+                <div class="hero-actions">
+                    <button data-page="listings" class="btn btn-red btn-lg btn-magic">
+                        <span>Смотреть каталог</span>
+                    </button>
+                    <button data-page="contacts" class="btn btn-white btn-lg">Контакты</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="container section-padding">
+            <h2 class="section-title center">Почему мы?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="icon-box"><i class="fas fa-globe"></i></div>
+                    <h3>Онлайн база</h3>
+                    <p>Все объявления хранятся в облаке и доступны всем.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-box"><i class="fas fa-mobile-alt"></i></div>
+                    <h3>Удобство</h3>
+                    <p>Идеально работает на телефоне и компьютере.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-box"><i class="fas fa-shield-alt"></i></div>
+                    <h3>Безопасность</h3>
+                    <p>Надежная система авторизации пользователей.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- СТРАНИЦА: КАТАЛОГ -->
+    <section id="listings" class="page hidden">
+        <div class="container section-padding-top">
+            <div class="catalog-header">
+                <h2 class="section-title">Актуальные предложения</h2>
+                
+                <div class="filters-bar">
+                    <select id="f-type">
+                        <option value="all">Все типы</option>
+                        <option value="rent">Аренда</option>
+                        <option value="sale">Продажа</option>
+                    </select>
+                    <input type="number" id="f-price" placeholder="Макс. цена ($)">
+                    <button id="btn-apply-filters" class="btn btn-black">Поиск</button>
+                </div>
+            </div>
+
+            <!-- Спиннер загрузки -->
+            <div id="loader" class="loader hidden"></div>
+
+            <div id="listings-container" class="listings-grid">
+                <!-- Карточки загружаются через JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- СТРАНИЦА: ДОБАВИТЬ ОБЪЯВЛЕНИЕ -->
+    <section id="add-listing" class="page hidden">
+        <div class="container section-padding-top">
+            <div class="form-wrapper">
+                <h2 class="section-title center">Новое объявление</h2>
+                <form id="form-add" class="styled-form">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label>Заголовок</label>
+                            <input type="text" id="l-title" placeholder="Например: 2-к квартира" required>
+                        </div>
+                        <div class="form-col">
+                            <label>Тип</label>
+                            <select id="l-type">
+                                <option value="rent">Аренда</option>
+                                <option value="sale">Продажа</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label>Цена ($)</label>
+                            <input type="number" id="l-price" required>
+                        </div>
+                        <div class="form-col">
+                            <label>Площадь (м²)</label>
+                            <input type="number" id="l-area" required>
+                        </div>
+                    </div>
+
+                    <div class="form-col">
+                        <label>Адрес</label>
+                        <input type="text" id="l-address" placeholder="Улица, дом" required>
+                    </div>
+
+                    <div class="form-col">
+                        <label>Ссылка на фото (URL)</label>
+                        <input type="url" id="l-img" placeholder="http://..." required>
+                    </div>
+
+                    <div class="form-col">
+                        <label>Описание</label>
+                        <textarea id="l-desc" rows="5" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-red btn-block">Опубликовать в базу</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- СТРАНИЦА: АВТОРИЗАЦИЯ -->
+    <section id="auth" class="page hidden">
+        <div class="auth-wrapper">
+            <div class="auth-card">
+                <h2 id="auth-title">Вход</h2>
+                
+                <!-- Форма входа -->
+                <form id="login-form">
+                    <input type="email" id="login-email" placeholder="Email" required>
+                    <input type="password" id="login-pass" placeholder="Пароль" required>
+                    <button type="submit" class="btn btn-red btn-block">Войти</button>
+                </form>
+
+                <!-- Форма регистрации (скрыта по умолчанию) -->
+                <form id="reg-form" class="hidden">
+                    <input type="email" id="reg-email" placeholder="Email" required>
+                    <input type="password" id="reg-pass" placeholder="Пароль" required>
+                    <button type="submit" class="btn btn-red btn-block">Зарегистрироваться</button>
+                </form>
+
+                <div class="auth-footer">
+                    <p id="auth-switch-text">Нет аккаунта?</p>
+                    <button id="btn-toggle-auth" type="button" class="btn-text">Создать аккаунт</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- СТРАНИЦА: КОНТАКТЫ -->
+    <section id="contacts" class="page hidden">
+        <div class="container section-padding-top">
+            <div class="contacts-layout">
+                <div class="contacts-info">
+                    <h2 class="section-title">Контакты</h2>
+                    <div class="contact-item">
+                        <h3>Телефон</h3>
+                        <p class="big-text">+375 (29) 123-45-67</p>
+                    </div>
+                    <div class="contact-item">
+                        <h3>Email</h3>
+                        <p>info@krysha.by</p>
+                    </div>
+                </div>
+                <div class="contacts-map">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2350.1!2d27.55!3d53.9!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTPCsDU0JzAwLjAiTiAyN8KwMzMnMDAuMCJF!5e0!3m2!1sen!2sby!4v1600000000000" loading="lazy"></iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Скрипт -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>
